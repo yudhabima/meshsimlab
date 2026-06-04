@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagram Aliran Tenaga Transmisi - Gigi 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        /* Style untuk Flowchart atas */
+        .flowchart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .box {
+            background: #bcbcbc;
+            color: black;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            width: 80px;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);
+        }
+        .arrow {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin: 0 8px;
+        }
+        /* Style untuk Canvas tempat menggambar mekanis */
+        canvas {
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+
+    <div style="align-self: flex-start; margin-left: 10%; font-size: 24px; font-weight: bold; margin-bottom: 15px;">
+        a. Posisi gigi ke 1.
+    </div>
+
+    <div class="flowchart">
+        <div class="box">Input<br>Shaft</div><div class="arrow">➔</div>
+        <div class="box">Main Drive<br>Gear</div><div class="arrow">➔</div>
+        <div class="box">Counter<br>Gear</div><div class="arrow">➔</div>
+        <div class="box">Counter<br>Gear Shaft</div><div class="arrow">➔</div>
+        <div class="box">1st Gear</div><div class="arrow">➔</div>
+        <div class="box">Clutch Hub<br>Sleeve</div><div class="arrow">➔</div>
+        <div class="box">Clutch<br>Hub</div><div class="arrow">➔</div>
+        <div class="box">Output<br>Shaft</div>
+    </div>
+
+    <canvas id="transmisiCanvas" width="900" height="450"></canvas>
+
+    <script>
+        const canvas = document.getElementById('transmisiCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Fungsi menggambar casing luar (abu-abu tipis)
+        function drawCasing() {
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Rumah Kopling (Kiri)
+            ctx.moveTo(200, 80);
+            ctx.lineTo(240, 80);
+            ctx.lineTo(240, 160);
+            // Rumah Transmisi Utama
+            ctx.lineTo(820, 160);
+            ctx.lineTo(820, 220);
+            ctx.lineTo(850, 220);
+            ctx.lineTo(850, 320);
+            ctx.lineTo(820, 320);
+            ctx.lineTo(820, 390);
+            ctx.lineTo(240, 390);
+            // Bagian bawah rumah kopling
+            ctx.lineTo(240, 420);
+            ctx.lineTo(200, 420);
+            ctx.stroke();
+        }
+
+        // Fungsi menggambar komponen gigi dan shaft dasar (warna abu-abu gelap)
+        function drawComponents() {
+            ctx.fillStyle = '#777777';
+            ctx.strokeStyle = '#444444';
+            ctx.lineWidth = 1.5;
+
+            // Input Shaft (Kiri)
+            ctx.fillRect(180, 235, 150, 20);
+            ctx.strokeRect(180, 235, 150, 20);
+            
+            // Main Drive Gear
+            ctx.fillRect(310, 190, 40, 110);
+            ctx.strokeRect(310, 190, 40, 110);
+
+            // Counter Gear Shaft (Bawah)
+            ctx.fillRect(310, 320, 230, 20);
+            ctx.strokeRect(310, 320, 230, 20);
+
+            // Counter Gear
+            ctx.fillRect(310, 300, 40, 60);
+            ctx.strokeRect(310, 300, 40, 60);
+
+            // 1st Gear (Bawah & Atas kanan)
+            ctx.fillRect(500, 300, 40, 60); // Counter 1st
+            ctx.strokeRect(500, 300, 40, 60);
+            
+            ctx.fillRect(500, 180, 40, 70); // Main 1st
+            ctx.strokeRect(500, 180, 40, 70);
+
+            // Hub Sleeve & Clutch Hub (Tengah)
+            ctx.fillStyle = '#555555';
+            ctx.fillRect(430, 205, 50, 80);
+            ctx.strokeRect(430, 205, 50, 80);
+
+            // Output Shaft (Kanan)
+            ctx.fillStyle = '#777777';
+            ctx.fillRect(350, 235, 500, 20);
+            ctx.strokeRect(350, 235, 500, 20);
+
+            // Label Teks Komponen
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px Arial';
+            
+            ctx.fillText("Input Shaft", 90, 250);
+            ctx.fillText("Main Drive Gear", 280, 150);
+            ctx.fillText("Counter Gear Shaft", 70, 340);
+            ctx.fillText("Counter Gear", 260, 425);
+            ctx.fillText("1st Gear", 495, 140);
+            ctx.fillText("Clutch Hub and Hub Sleeve", 390, 425);
+            ctx.fillText("Output Shaft", 860, 245);
+
+            // Garis Penunjuk Label
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            
+            // Pointer Input Shaft
+            ctx.beginPath(); ctx.moveTo(170, 245); ctx.lineTo(190, 245); ctx.stroke();
+            // Pointer Main Drive
+            ctx.beginPath(); ctx.moveTo(330, 155); ctx.lineTo(330, 190); ctx.stroke();
+            // Pointer Counter Gear Shaft
+            ctx.beginPath(); ctx.moveTo(200, 335); ctx.lineTo(310, 335); ctx.stroke();
+            // Pointer Counter Gear
+            ctx.beginPath(); ctx.moveTo(330, 410); ctx.lineTo(330, 360); ctx.stroke();
+            // Pointer 1st Gear
+            ctx.beginPath(); ctx.moveTo(520, 145); ctx.lineTo(520, 180); ctx.stroke();
+            // Pointer Hub
+            ctx.beginPath(); ctx.moveTo(460, 410); ctx.lineTo(460, 285); ctx.stroke();
+            // Pointer Output Shaft
+            ctx.beginPath(); ctx.moveTo(855, 245); ctx.lineTo(820, 245); ctx.stroke();
+        }
+
+        // Fungsi menggambar Aliran Tenaga Berwarna Merah (Glow Effect)
+        function drawPowerFlow() {
+            ctx.strokeStyle = 'rgba(230, 0, 0, 0.9)'; // Warna merah pekat
+            ctx.lineWidth = 8;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            // Memberikan efek semi-glow agar mirip gambar asli
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "red";
+
+            ctx.beginPath();
+            // 1. Masuk dari Input Shaft
+            ctx.moveTo(180, 245); 
+            ctx.lineTo(330, 245); 
+            
+            // 2. Turun melewati Main Drive Gear ke Counter Gear
+            ctx.lineTo(330, 335); 
+            
+            // 3. Mengalir sepanjang Counter Gear Shaft
+            ctx.lineTo(520, 335); 
+            
+            // 4. Naik ke gigi 1 (1st Gear)
+            ctx.lineTo(520, 245); 
+            
+            // 5. Masuk ke Clutch Hub / Sleeve dan keluar menuju Output Shaft
+            ctx.lineTo(815, 245); 
+            ctx.stroke();
+
+            // Reset efek shadow agar tidak merusak gambar panah biasa
+            ctx.shadowBlur = 0; 
+
+            // --- Menggambar Panah Penunjuk Aliran ---
+            ctx.fillStyle = '#ffffff'; // Panah warna putih di dalam jalur merah
+
+            function drawArrow(x, y, angle) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(-8, -5);
+                ctx.lineTo(5, 0);
+                ctx.lineTo(-8, 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Letakkan panah di titik-titik alur sesuai gambar asli
+            drawArrow(240, 245, 0);          // Kiri (Input Shaft)
+            drawArrow(330, 285, Math.PI/2);  // Turun ke bawah
+            drawArrow(420, 335, 0);          // Bergerak di shaft bawah
+            drawArrow(520, 290, -Math.PI/2); // Naik ke gigi 1
+            drawArrow(600, 245, 0);          // Bergerak ke kanan menuju output
+            drawArrow(740, 245, 0);          // Menuju ujung Output Shaft
+        }
+
+        // Eksekusi semua fungsi gambar
+        drawCasing();
+        drawComponents();
+        drawPowerFlow();
+
+    </script>
+</body>
+</html>

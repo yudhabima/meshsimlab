@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechsim Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: #F4F8FF;
+            color: #1A237E;
+        }
+
+        /* Navigation */
+        nav {
+            background: #0066FF;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+
+        .logo img {
+            height: 45px; /* ukuran logo */
+            width: auto;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #0066FF 0%, #4DA3FF 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 100px 20px 80px;
+            color: #ffffff;
+        }
+
+        .hero-logo {
+    margin-bottom: 25px;
+}
+
+        .hero-logo img {
+            height: 120px;        /* UKURAN LOGO HERO */
+            width: auto;
+            max-width: 90%;
+            object-fit: contain;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            background: #FF8A00;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(255,138,0,0.35);
+            background: #FF9E33;
+        }
+
+        /* Video Tutorial Section */
+        .video-section {
+            padding: 80px 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .video-section h2 {
+            color: #0066FF;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .video-section p {
+            color: #0066FF;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .video-container {
+            max-width: 720px;        
+            aspect-ratio: 16 / 9;    /* rasio video */
+            margin: 0 auto;
+            background: #000;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Materials Section */
+        .materials-section {
+            padding: 80px 20px;
+            background: #F4F8FF;
+            text-align: center;
+            color: #1A237E;
+        }
+
+        .materials-section h2 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .materials-section > p {
+            font-size: 18px;
+            margin-bottom: 50px;
+        }
+
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1500px;
+            margin: 0 auto 40px;
+        }
+
+        .material-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+        }
+
+        .material-card:hover {
+            transform: translateY(-10px);
+            background: #E8F1FF;
+            box-shadow: 0 14px 40px #0052CC;
+        }
+
+        .material-card img {
+            width: 100px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .material-card h3 {
+            color: #1A237E;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .material-card p {
+            color: #1A237E;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary {
+            background: #0052CC;
+            color: #ffffff;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #ffffff;
+            color: #0052CC;
+        }
+
+        .btn-module {
+           background: #FF8A00;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-module:hover {
+            transform: translateY(-2px);
+            background: #FF9E33;
+            box-shadow: 0 6px 20px rgba(255,138,0,0.28);
+        }
+
+        .btn-module::before {
+            content: "";
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 20px;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: #0066FF;
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+
+        .btn-action {
+            background: #FF8A00;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            background: #FF9E33;
+            box-shadow: 0 6px 20px rgba(255,138,0,0.28);
+        }
+
+        /* Footer */
+        footer {
+            background: #0066FF;
+            padding: 60px 50px 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 50px;
+            max-width: 1200px;
+            margin: 0 auto 30px;
+        }
+
+        .footer-brand .logo {
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .footer-brand p {
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-links a {
+            color: #ffffff;
+            font-size: 24px;
+            text-decoration: none;
+        }
+
+        .footer-section h3 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .footer-section p {
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            color: #ffffff;
+            font-size: 14px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .materials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <img src="public/assets/img/logoputih.png" alt="">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#beranda">Simulasi</a></li>
+            <li><a href="#materi">Materi</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="beranda">
+        <div class="hero-logo">
+            <img src="public/assets/img/logoputih.png" alt="Logo MeshSim">
+</div>
+        <p>Tingkatkan pemahaman tentang sistem transmisi dengan simulasi virtual yang realistis dan interaktif</p>
+        <a href="/simulasimain.html" class="btn-primary">Mulai Sekarang</a>
+    </section>
+
+    <!-- Materials Section -->
+    <section class="materials-section" id="materi">
+        <h2>Materi</h2>
+        <p>Rasakan serunya belajar di MeshSim</p>
+        
+    <div class="materials-grid">
+    
+            <div class="material-card">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%230066FF'%3E%3Cpath d='M56 8h-12l-2 10a32 32 0 00-8 3l-8-6-8 8 6 8a32 32 0 00-3 8L8 44v12l10 2a32 32 0 003 8l-6 8 8 8 8-6a32 32 0 008 3l2 10h12l2-10a32 32 0 008-3l8 6 8-8-6-8a32 32 0 003-8l10-2V44l-10-2a32 32 0 00-3-8l6-8-8-8-8 6a32 32 0 00-8-3z'/%3E%3Ccircle cx='50' cy='50' r='15' fill='white'/%3E%3C/g%3E%3C/svg%3E"
+                alt="Gear">
+                <h3>Pendahuluan</h3>
+                <p>Memahami fungsi dan peran sistem transmisi</p>
+                <a href="/materi1.html" class="btn-secondary">Pilih</a>
+            </div>
+            
+            <div class="material-card">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%230066FF'%3E%3Cpath d='M56 8h-12l-2 10a32 32 0 00-8 3l-8-6-8 8 6 8a32 32 0 00-3 8L8 44v12l10 2a32 32 0 003 8l-6 8 8 8 8-6a32 32 0 008 3l2 10h12l2-10a32 32 0 008-3l8 6 8-8-6-8a32 32 0 003-8l10-2V44l-10-2a32 32 0 00-3-8l6-8-8-8-8 6a32 32 0 00-8-3z'/%3E%3Ccircle cx='50' cy='50' r='15' fill='white'/%3E%3C/g%3E%3C/svg%3E"
+                alt="Gear">                
+                <h3>Prinsip Dasar Transmisi</h3>
+                <p>Mempelajari prinsip kerja transmisi pada kendaraan bermotor</p>
+                <a href="/materi2.html" class="btn-secondary">Pilih</a>
+            </div>
+            <div class="material-card">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%230066FF'%3E%3Cpath d='M56 8h-12l-2 10a32 32 0 00-8 3l-8-6-8 8 6 8a32 32 0 00-3 8L8 44v12l10 2a32 32 0 003 8l-6 8 8 8 8-6a32 32 0 008 3l2 10h12l2-10a32 32 0 008-3l8 6 8-8-6-8a32 32 0 003-8l10-2V44l-10-2a32 32 0 00-3-8l6-8-8-8-8 6a32 32 0 00-8-3z'/%3E%3Ccircle cx='50' cy='50' r='15' fill='white'/%3E%3C/g%3E%3C/svg%3E"
+                alt="Gear">
+                <h3>Transmisi Manual</h3>
+                <p>Mempelajari prinsip kerja transmisi manual pada kendaraan bermotor</p>
+                <a href="/materi3.html" class="btn-secondary">Pilih</a>
+            </div>
+            
+            <div class="material-card">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%230066FF'%3E%3Cpath d='M56 8h-12l-2 10a32 32 0 00-8 3l-8-6-8 8 6 8a32 32 0 00-3 8L8 44v12l10 2a32 32 0 003 8l-6 8 8 8 8-6a32 32 0 008 3l2 10h12l2-10a32 32 0 008-3l8 6 8-8-6-8a32 32 0 003-8l10-2V44l-10-2a32 32 0 00-3-8l6-8-8-8-8 6a32 32 0 00-8-3z'/%3E%3Ccircle cx='50' cy='50' r='15' fill='white'/%3E%3C/g%3E%3C/svg%3E"
+                alt="Gear">
+                <h3>Transfer Case</h3>
+                <p>Mempelajari prinsip kerja transfer case pada kendaraan bermotor</p>
+                <a href="/materi4.html" class="btn-secondary">Pilih</a>
+            </div>
+    </div>
+
+    <a href="https://drive.google.com/file/d/1pDvuclEjnCjoc94eTRzmfA7MKiQ_aUoo/view?usp=sharing"
+   class="btn-module"
+   target="_blank"
+   rel="noopener noreferrer">
+   Lihat Bahan Belajar
+</a>
+
+    </section>
+
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+            <img src="public/assets/img/logoputih.png" alt="Logo MeshSim">
+            <p> </p>
+                <p>Dapatkan informasi terbaru MeshSim<br>dengan follow sosial media di bawah ini!</p>
+                <div class="social-links">
+                    <a href="#"></a>
+                    <a href="#"></a>
+                    <a href="#"></a>
+                </div>
+            </div>
+
+            </div>
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <p>meshsim@gmail.com</p>
+                <p>0857-9151-3800</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Location</h3>
+                <p>Jl. Ketintang Wiyata<br>Ketintang, Kec. Gayungan,<br>Kota Surabaya, Jawa Timur<br>60231</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            ©meshsim.2026
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                nav.style.padding = '15px 50px';
+            } else {
+                nav.style.padding = '20px 50px';
+            }
+            
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
+</html>

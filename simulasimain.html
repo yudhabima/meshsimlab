@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab — Transmission Power Flow Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --blue: #0066FF; --blue-dark: #0047CC; --blue-light: #E8F1FF;
+            --orange: #FF8A00; --orange-light: #FFE0C2;
+            --green: #34D399; --green-light: #D7F6E9;
+            --red: #EF4444; --red-light: #FECACA;
+            --gray-light: #F1F5F9; --white: #FFFFFF;
+            --text: #1A237E; --text-muted: rgba(26,35,126,0.72);
+            --shadow: 0 10px 30px rgba(0,102,255,0.12);
+            --radius: 14px; --radius-sm: 8px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F4F8FF; min-height: 100vh; color: var(--text); }
+
+        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#0066FF 0%,#4DA3FF 60%); position: relative; overflow: hidden; }
+        #login-screen::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 20% 80%,rgba(255,255,255,0.08) 0%,transparent 60%); }
+        .login-card { background: rgba(255,255,255,0.97); border-radius: 28px; padding: 52px 44px 44px; width: 420px; max-width: 95vw; box-shadow: 0 24px 64px rgba(0,102,255,0.22); position: relative; z-index: 1; text-align: center; }
+        .login-icon { width: 72px; height: 72px; background: linear-gradient(135deg,#0066FF,#FF8A00); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; box-shadow: 0 8px 24px rgba(0,102,255,0.2); }
+        .login-card h1 { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; color: var(--blue-dark); line-height: 1.2; margin-bottom: 6px; }
+        .login-card p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 700; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+        .form-group input { width: 100%; padding: 13px 18px; border: 2px solid #BBDEFB; border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); background: #f5faff; transition: border-color .2s,box-shadow .2s; outline: none; }
+        .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,102,255,0.15); }
+        .btn-login { width: 100%; padding: 14px; background: #FF8A00; color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 1px; cursor: pointer; box-shadow: 0 6px 20px rgba(255,138,0,0.3); transition: transform .15s,box-shadow .15s; margin-top: 8px; }
+        .btn-login:hover { transform: translateY(-2px); }
+        .login-error { color: var(--red); font-size: 13px; font-weight: 700; margin-top: 10px; display: none; }
+
+        #app { display: none; }
+        .top-bar { background: linear-gradient(135deg,#0066FF 0%,#4DA3FF 100%); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 3px 16px rgba(0,102,255,0.18); position: sticky; top: 0; z-index: 100; }
+        .top-bar-logo img {
+    height: 45px;
+    width: auto;
+    display: block;
+}
+        .top-bar-right { display: flex; align-items: center; gap: 18px; }
+        .user-badge { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 6px 16px 6px 10px; display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; font-size: 14px; }
+        .user-badge .avatar { width: 32px; height: 32px; background: linear-gradient(135deg,#FFE0B2,#FF6F00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #fff; }
+        .score-bar { display: flex; gap: 14px; }
+        .score-pill { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 5px 16px; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .score-pill .label { opacity: .8; font-size: 12px; font-weight: 600; }
+
+        .main-content { max-width: 1200px; margin: 0 auto; padding: 32px 20px 60px; }
+        .section-title { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--blue-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; display: block; width: 4px; height: 22px; background: linear-gradient(180deg,var(--blue),var(--orange)); border-radius: 4px; }
+
+        .gear-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+        .gear-tab { padding: 10px 24px; border: 2.5px solid var(--blue-light); border-radius: 999px; background: var(--white); font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--blue); cursor: pointer; transition: all .2s; }
+        .gear-tab:hover { background: var(--blue-light); border-color: var(--blue); }
+        .gear-tab.active { background: linear-gradient(135deg,var(--blue),var(--blue-dark)); color: #fff; border-color: var(--blue-dark); box-shadow: 0 4px 16px rgba(33,150,243,0.3); transform: translateY(-1px); }
+        .gear-tab.reverse { border-color: #FFCDD2; color: var(--red); }
+        .gear-tab.reverse:hover { background: #FFCDD2; }
+        .gear-tab.reverse.active { background: linear-gradient(135deg,#E53935,#B71C1C); border-color: #B71C1C; }
+
+        .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 860px) { .sim-grid { grid-template-columns: 1fr; } }
+        .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; border: 1.5px solid rgba(0,102,255,0.12); transition: transform .2s, background .2s, border-color .2s; }
+        .card:hover { background: #E8F1FF; border-color: rgba(0,102,255,0.25); transform: translateY(-2px); }
+
+        .diagram-title { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: var(--blue-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .puzzle-info { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; background: var(--blue-light); border-radius: var(--radius-sm); padding: 10px 14px; font-weight: 600; }
+        .puzzle-info span { color: var(--blue-dark); font-weight: 800; }
+
+        .slots-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .slot { width: 108px; min-height: 64px; border: 2.5px dashed #90CAF9; border-radius: var(--radius-sm); background: #F5FAFF; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; color: #90CAF9; cursor: pointer; transition: all .2s; position: relative; text-align: center; padding: 8px 6px; }
+        .slot .slot-num { position: absolute; top: 3px; left: 6px; font-size: 10px; color: #90CAF9; font-weight: 800; }
+        .slot.has-card { border-style: solid; border-color: var(--blue); background: var(--blue-light); color: var(--blue-dark); }
+        .slot.has-card.correct-slot { border-color: var(--green); background: var(--green-light); color: var(--green); }
+        .slot.has-card.wrong-slot { border-color: var(--red); background: var(--red-light); color: var(--red); }
+        .slot.drag-over { border-color: var(--orange); background: var(--orange-light); transform: scale(1.04); }
+        .slot-label { font-size: 11px; line-height: 1.3; }
+        .slot-icon { font-size: 18px; margin-bottom: 3px; }
+
+        .bank-title { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+        .bank { display: flex; gap: 8px; flex-wrap: wrap; min-height: 60px; background: #F8FAFC; border-radius: var(--radius-sm); padding: 12px; border: 1.5px dashed #CFD8DC; }
+        .comp-card { padding: 10px 14px; background: white; border: 2px solid #BBDEFB; border-radius: var(--radius-sm); font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: var(--blue-dark); cursor: grab; user-select: none; transition: all .15s; box-shadow: 0 2px 6px rgba(33,150,243,0.1); display: flex; align-items: center; gap: 6px; }
+        .comp-card:hover { background: var(--blue-light); border-color: var(--blue); transform: translateY(-2px); }
+        .comp-card.dragging { opacity: .5; }
+
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        .btn { padding: 10px 22px; border: none; border-radius: var(--radius-sm); font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: #FF8A00; color: #fff; box-shadow: 0 4px 14px rgba(255,138,0,0.28); }
+        .btn-success { background: linear-gradient(135deg,#34D399,var(--green)); color: #fff; }
+        .btn-warn { background: #FF8A00; color: #fff; }
+        .btn-gray { background: var(--gray-light); color: var(--text-muted); border: 1.5px solid #CFD8DC; }
+        .btn-red { background: linear-gradient(135deg,#EF4444,#DC2626); color: #fff; }
+
+        .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(120px); padding: 16px 32px; border-radius: 999px; font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #fff; z-index: 1000; transition: transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s; opacity: 0; pointer-events: none; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: linear-gradient(135deg,#43A047,#1B5E20); }
+        .toast.error { background: linear-gradient(135deg,#E53935,#B71C1C); }
+
+        .info-card { background: #FFFFFF; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; border: 1.5px solid rgba(0,102,255,0.12); }
+        .info-card h3 { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: var(--blue-dark); margin-bottom: 8px; }
+        .info-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+        .stats-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+        .stat-box { flex: 1; min-width: 140px; background: var(--white); border-radius: var(--radius-sm); padding: 16px 20px; border: 1.5px solid rgba(33,150,243,0.12); text-align: center; }
+        .stat-box .stat-val { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; color: var(--blue); }
+        .stat-box .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+
+        .log-card { margin-top: 24px; }
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th { background: var(--blue-light); color: var(--blue-dark); font-family: 'Rajdhani', sans-serif; font-weight: 700; padding: 10px 14px; text-align: left; }
+        .log-table td { padding: 9px 14px; border-bottom: 1px solid #ECEFF1; color: var(--text-muted); }
+        .log-table tr:hover td { background: #F5FAFF; }
+        .badge-correct { background: var(--green-light); color: var(--green); padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+        .badge-wrong { background: var(--red-light); color: var(--red); padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(21,101,192,0.18); backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: var(--radius); padding: 36px 40px; width: 460px; max-width: 95vw; box-shadow: 0 24px 64px rgba(21,101,192,0.2); text-align: center; }
+        .modal h2 { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; color: var(--blue-dark); margin-bottom: 10px; }
+        .modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+        .modal .btn-row { justify-content: center; }
+
+        /* TRANSMISSION DIAGRAM */
+        .tx-diagram-wrap {
+            background: #f0f4f8;
+            border-radius: 12px;
+            padding: 16px 12px 12px;
+            margin-top: 8px;
+            border: 1.5px solid rgba(33,150,243,0.12);
+            overflow-x: auto;
+        }
+        .tx-diagram-wrap svg { display: block; width: 100%; height: auto; }
+
+        .diag-status {
+            text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 8px;
+            margin-top: 10px;
+            background: #ECEFF1;
+            color: #90A4AE;
+            transition: all .4s;
+        }
+        .diag-status.correct { background: #C8E6C9; color: #2E7D32; }
+        .diag-status.wrong { background: #FFCDD2; color: #C62828; }
+
+        @keyframes flowPulse { 0%,100%{opacity:1}50%{opacity:.55} }
+        .pulse { animation: flowPulse 1.4s ease-in-out infinite; }
+
+        .gear-info-text { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 12px; }
+        .gear-info-text b { color: var(--blue-dark); }
+
+        .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.logo img {
+    height: 45px;
+    width: auto;
+}
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-card">
+        <div class="logo">
+            <img src="public/assets/img/logo-meshsim.png" alt="Logo MeshSim">
+        </div>
+        <p class="subtitle">Power Flow Simulator — Manual Transmission</p>
+        <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="input-name" placeholder="Masukkan nama lengkap..."/>
+        </div>
+        <div class="form-group">
+            <label>Nomor Absen</label>
+            <input type="text" id="input-absen" placeholder="Contoh: 15"/>
+        </div>
+        <button type="button" class="btn-login" id="login-button">Mulai Simulasi</button>
+        <p class="login-error" id="login-error">⚠ Nama dan nomor absen harus diisi!</p>
+    </div>
+</div>
+
+<div id="app">
+    <div class="top-bar">
+        <a href="/index.html">
+        <div class="top-bar-logo">
+            <img src="public/assets/img/logo-meshsim.png" alt="Logo MeshSim">
+        </div>
+        </a>
+        <div class="top-bar-right">
+            <div class="score-bar">
+                <div class="score-pill"><span class="label">BENAR</span> <span id="score-correct">0</span></div>
+                <div class="score-pill"><span class="label">TOTAL</span> <span id="score-total">0</span></div>
+                <div class="score-pill"><span class="label">AKURASI</span> <span id="score-acc">0%</span></div>
+            </div>
+            <div class="user-badge">
+                <div class="avatar" id="user-avatar">A</div>
+                <span id="user-display">Student</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="info-card">
+            <h3>📋 Petunjuk Simulasi</h3>
+            <p>Pilih posisi gigi → <strong>seret komponen</strong> ke slot bernomor → klik <strong>Cek Jawaban</strong>. Jika benar, jalur transmisi di diagram akan <strong>menyala</strong> mengikuti alur tenaga. Diagram hanya menampilkan nomor komponen — ujilah ingatanmu!</p>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box"><div class="stat-val" id="stat-correct">0</div><div class="stat-label">Jawaban Benar</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-total">0</div><div class="stat-label">Total Percobaan</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-acc">0%</div><div class="stat-label">Akurasi</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
+        </div>
+
+        <p class="section-title">Pilih Posisi Gigi</p>
+        <div class="gear-tabs" id="gear-tabs"></div>
+
+        <div class="sim-grid" style="margin-top:24px">
+            <div class="card">
+                <p class="diagram-title">Urutan Aliran Tenaga</p>
+                <div class="puzzle-info">Susun komponen ke slot bernomor untuk <span id="puzzle-gear-label">Gigi 1</span>. Double-click slot untuk mengembalikan.</div>
+                <div class="slots-row" id="slots-row"></div>
+                <div class="bank-title">Komponen</div>
+                <div class="bank" id="bank" ondragover="onBankDragOver(event)" ondrop="onBankDrop(event)"></div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="checkAnswer()">✅ Cek Jawaban</button>
+                    <button class="btn btn-warn" onclick="shuffleBank()">🔀 Acak Ulang</button>
+                    <button class="btn btn-gray" onclick="resetPuzzle()">🗑 Reset</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <p class="diagram-title">Diagram Jalur Transmisi</p>
+                <div id="gear-info-text" class="gear-info-text"></div>
+                <div class="tx-diagram-wrap">
+                    <div id="tx-svg-container"></div>
+                </div>
+                <div class="diag-status" id="diag-status">⬜ Susun komponen dengan benar untuk menyalakan jalur aliran!</div>
+            </div>
+        </div>
+
+        <div class="card log-card">
+            <p class="section-title">Riwayat Percobaan</p>
+            <table class="log-table">
+                <thead><tr><th>#</th><th>Gigi</th><th>Waktu</th><th>Status</th><th>Urutan</th></tr></thead>
+                <tbody id="log-body"></tbody>
+            </table>
+        </div>
+
+        <div class="btn-row" style="margin-top:24px;justify-content:center">
+            <button class="btn btn-success" onclick="downloadReport()">⬇ Download Laporan</button>
+            <button class="btn btn-gray" onclick="openShareModal()">📤 Kirim</button>
+            <button class="btn btn-red" onclick="confirmReset()">🔄 Reset Semua</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modal-share">
+    <div class="modal">
+        <h2>📤 Kirim Laporan</h2>
+        <p>Salin teks berikut untuk berbagi hasil simulasimu.</p>
+        <textarea id="share-text" style="width:100%;height:120px;resize:none;border:1.5px solid #BBDEFB;border-radius:8px;padding:10px;font-size:13px;font-family:'Share Tech Mono',monospace;color:#1A237E;background:#F5FAFF;outline:none"></textarea>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="copyShareText()">📋 Salin</button>
+            <button class="btn btn-gray" onclick="closeModal('modal-share')">Tutup</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="modal-reset">
+    <div class="modal">
+        <h2>⚠ Reset Semua Data?</h2>
+        <p>Semua riwayat percobaan dan skor akan dihapus.</p>
+        <div class="btn-row">
+            <button class="btn btn-red" onclick="doResetAll()">Ya, Reset</button>
+            <button class="btn btn-gray" onclick="closeModal('modal-reset')">Batal</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// GEAR DATA
+// ============================================================
+const GEARS = {
+    '1': {
+        label:'Gigi 1', color:'#2196F3', reverse:false,
+        components:['Input Shaft','Main Drive Gear','Counter Gear','Counter Gear Shaft','1st Gear','Clutch Hub Sleeve','Clutch Hub','Output Shaft'],
+        info:'<b>Gigi 1</b> — start/tanjakan. Rasio tertinggi → torsi maks, kecepatan rendah. Jalur: Input → Counter shaft → 1st Gear besar → Output.'
+    },
+    '2': {
+        label:'Gigi 2', color:'#00ACC1', reverse:false,
+        components:['Input Shaft','Main Drive Gear','Counter Gear','Counter Gear Shaft','2nd Gear','Clutch Hub Sleeve','Clutch Hub','Output Shaft'],
+        info:'<b>Gigi 2</b> — akselerasi lanjutan. Rasio lebih rendah dari gigi 1 → lebih cepat, torsi lebih kecil. Jalur sama tapi via 2nd Gear.'
+    },
+    '3': {
+        label:'Gigi 3', color:'#7B1FA2', reverse:false,
+        components:['Input Shaft','Main Drive Gear','Counter Gear','Counter Gear Shaft','3rd Gear','Clutch Hub Sleeve','Clutch Hub','Output Shaft'],
+        info:'<b>Gigi 3</b> — kecepatan menengah kota. Torsi sedang, efisiensi mulai baik.'
+    },
+    '4': {
+        label:'Gigi 4', color:'#388E3C', reverse:false,
+        components:['Input Shaft','Main Drive Gear (4th)','Clutch Hub Sleeve','Clutch Hub','Output Shaft'],
+        info:'<b>Gigi 4</b> — direct drive. Input langsung terhubung Output via Main Drive Gear (4th). Tanpa counter shaft → efisiensi max.'
+    },
+    '5': {
+        label:'Gigi 5', color:'#F57C00', reverse:false,
+        components:['Input Shaft','Main Drive Gear','Counter Gear','Counter Gear Shaft','5th Gear','Clutch Hub Sleeve','Clutch Hub','Output Shaft'],
+        info:'<b>Gigi 5</b> — overdrive tol. Rasio < 1 → output lebih cepat dari input. Konsumsi BBM irit.'
+    },
+    'R': {
+        label:'Reverse', color:'#E53935', reverse:true,
+        components:['Input Shaft','Main Drive Gear','Counter Gear','Counter Gear Shaft','Reverse Idler Gear','Reverse Gear','Output Shaft'],
+        info:'<b>Reverse</b> — Reverse Idler Gear membalik arah putaran output → kendaraan mundur.'
+    }
+};
+
+// ============================================================
+// TRANSMISSION SVG — menyerupai diagram cross-section
+// Hanya nomor, tanpa nama. Nomor menyala saat benar.
+// ============================================================
+
+/*
+  Layout mirip gambar referensi:
+  - Housing berbentuk lonjong/trapezoid dari samping
+  - Input Shaft masuk dari kiri
+  - Output Shaft keluar ke kanan
+  - Counter Gear Shaft di bawah (sumbu kedua)
+  - Gigi-gigi ditampilkan sebagai lingkaran/silinder berlapis
+  - Jalur aliran ditampilkan sebagai garis merah/hijau tebal yang menyala
+  - Setiap komponen diberi NOMOR SAJA
+
+  Komponen & nomor (per gigi):
+  Gigi 1,2,3,5: 8 komponen → nomor 1-8
+  Gigi 4: 5 komponen → nomor 1-5
+  Reverse: 7 komponen → nomor 1-7
+*/
+
+function buildTxSVG(gearKey, state) {
+    const active = (state === 'correct' || state === 'reverse');
+    const pathCol = state === 'reverse' ? '#E53935' : (state === 'correct' ? '#43A047' : '#B0BEC5');
+    const nodeFill = state === 'reverse' ? '#FFCDD2' : (state === 'correct' ? '#C8E6C9' : '#ECEFF1');
+    const nodeStroke = state === 'reverse' ? '#E53935' : (state === 'correct' ? '#43A047' : '#90A4AE');
+    const numCol = state === 'reverse' ? '#B71C1C' : (state === 'correct' ? '#1B5E20' : '#546E7A');
+    const pulse = active ? ' pulse' : '';
+    const pw = active ? 4 : 2.5; // path stroke width
+
+    // Shared SVG helpers
+    const housing = (w,h) => `
+        <rect x="10" y="10" width="${w-20}" height="${h-20}" rx="22" fill="#E8EAED" stroke="#90A4AE" stroke-width="1.5"/>
+        <rect x="18" y="18" width="${w-36}" height="${h-36}" rx="17" fill="#F5F7FA" stroke="#B0BEC5" stroke-width="0.8"/>
+    `;
+    // Draw a gear (circle with teeth visual)
+    const gear = (cx,cy,r,num,highlight) => {
+        const f = highlight ? nodeFill : '#ECEFF1';
+        const s = highlight ? nodeStroke : '#90A4AE';
+        const tc = highlight ? numCol : '#546E7A';
+        const pw2 = highlight ? 2 : 1.2;
+        // Outer teeth as scalloped ring
+        const teeth = [];
+        const nt = Math.max(6, Math.round(r*1.4));
+        for(let i=0;i<nt;i++){
+            const a = (i/nt)*Math.PI*2;
+            const ro = r+4, ri = r+1;
+            const a1=a-0.18, a2=a+0.18;
+            const x1=cx+ri*Math.cos(a1), y1=cy+ri*Math.sin(a1);
+            const x2=cx+ro*Math.cos(a),  y2=cy+ro*Math.sin(a);
+            const x3=cx+ri*Math.cos(a2), y3=cy+ri*Math.sin(a2);
+            teeth.push(`<polygon points="${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)} ${x3.toFixed(1)},${y3.toFixed(1)}" fill="${s}" opacity="0.7"/>`);
+        }
+        return `<g class="${highlight?'pulse':''}">
+            ${teeth.join('')}
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="${f}" stroke="${s}" stroke-width="${pw2}"/>
+            <circle cx="${cx}" cy="${cy}" r="${r*0.35}" fill="${s}" opacity="0.5"/>
+            <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="Rajdhani,sans-serif" font-size="${r>16?14:12}" font-weight="800" fill="${tc}">${num}</text>
+        </g>`;
+    };
+    // Shaft bar
+    const shaft = (x1,y1,x2,y2,num,highlight,top) => {
+        const f = highlight ? nodeFill : '#E0E0E0';
+        const s = highlight ? nodeStroke : '#90A4AE';
+        const tc = highlight ? numCol : '#546E7A';
+        const pw2 = highlight ? 1.8 : 1;
+        const cx=(x1+x2)/2, cy=(y1+y2)/2;
+        const len=Math.sqrt((x2-x1)**2+(y2-y1)**2);
+        const w=len, h=14;
+        const angle=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+        return `<g class="${highlight?'pulse':''}" transform="translate(${x1},${y1}) rotate(${angle})">
+            <rect x="0" y="${-h/2}" width="${w}" height="${h}" rx="5" fill="${f}" stroke="${s}" stroke-width="${pw2}"/>
+            <text x="${w/2}" y="0" text-anchor="middle" dominant-baseline="central" font-family="Rajdhani,sans-serif" font-size="12" font-weight="800" fill="${tc}">${num}</text>
+        </g>`;
+    };
+    // Hub/sleeve box (wider rect)
+    const hub = (cx,cy,w,h,num,highlight) => {
+        const f = highlight ? nodeFill : '#ECEFF1';
+        const s = highlight ? nodeStroke : '#90A4AE';
+        const tc = highlight ? numCol : '#546E7A';
+        const pw2 = highlight ? 2 : 1.2;
+        return `<g class="${highlight?'pulse':''}">
+            <rect x="${cx-w/2}" y="${cy-h/2}" width="${w}" height="${h}" rx="5" fill="${f}" stroke="${s}" stroke-width="${pw2}"/>
+            <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="Rajdhani,sans-serif" font-size="12" font-weight="800" fill="${tc}">${num}</text>
+        </g>`;
+    };
+    // Flow path line
+    const fpath = (d) => `<path d="${d}" fill="none" stroke="${pathCol}" stroke-width="${pw}" stroke-linecap="round" stroke-linejoin="round" class="${pulse}" opacity="${active?1:0.35}"/>`;
+    // Arrow head at point
+    const arrow = (x,y,dir) => {
+        let pts;
+        if(dir==='right') pts=`${x},${y-5} ${x+9},${y} ${x},${y+5}`;
+        else if(dir==='left') pts=`${x},${y-5} ${x-9},${y} ${x},${y+5}`;
+        else if(dir==='up') pts=`${x-5},${y} ${x},${y-9} ${x+5},${y}`;
+        else pts=`${x-5},${y} ${x},${y+9} ${x+5},${y}`;
+        return `<polygon points="${pts}" fill="${pathCol}" class="${pulse}" opacity="${active?1:0.35}"/>`;
+    };
+
+    // ── GEAR 4 (direct drive, simpler) ──────────────────────────────────
+    if(gearKey==='4'){
+        const W=420,H=130;
+        const nodes = [
+            {type:'shaft', x1:20,y1:65,x2:90,y2:65, num:1, h:true},  // Input Shaft
+            {type:'gear',  cx:120,cy:65,r:22, num:2, h:true},          // Main Drive Gear (4th)
+            {type:'hub',   cx:200,cy:65,w:46,hh:22, num:3, h:true},   // Clutch Hub Sleeve
+            {type:'hub',   cx:270,cy:65,w:40,hh:22, num:4, h:true},   // Clutch Hub
+            {type:'shaft', x1:300,y1:65,x2:395,y2:65, num:5, h:true}, // Output Shaft
+        ];
+        let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += housing(W,H);
+        // Flow path
+        svg += fpath(`M 90 65 L 98 65`);
+        svg += fpath(`M 142 65 L 177 65`);
+        svg += fpath(`M 223 65 L 250 65`);
+        svg += fpath(`M 290 65 L 300 65`);
+        svg += arrow(305,65,'right');
+        // Nodes
+        svg += shaft(20,65,90,65,1,true);
+        svg += gear(120,65,22,2,true);
+        svg += hub(200,65,46,22,3,true);
+        svg += hub(270,65,40,22,4,true);
+        svg += shaft(300,65,395,65,5,true);
+        svg += `</svg>`;
+        return svg;
+    }
+
+    // ── REVERSE ──────────────────────────────────────────────────────────
+    if(gearKey==='R'){
+        const W=480,H=200;
+        // Layout:
+        // Top shaft: Input(1) → Main Drive Gear(2) → Counter Gear(3)
+        // Counter Gear Shaft (4) runs vertically down
+        // Bottom: Counter Gear Shaft pos → Reverse Idler(5) → Reverse Gear(6)
+        // Then path goes up to Output Shaft (7)
+        const iy=60, oy=60; // input/output shaft y
+        const csy=140; // counter shaft y
+        let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += housing(W,H);
+        // Flow paths
+        svg += fpath(`M 90 ${iy} L 105 ${iy}`);          // Input→MainDrive
+        svg += fpath(`M 148 ${iy} L 168 ${iy}`);          // MainDrive→CounterGear
+        svg += fpath(`M 210 ${iy} C 230 ${iy} 230 ${iy} 230 ${(iy+csy)/2} L 230 ${csy-16}`); // CounterGear→CShaft (down)
+        svg += fpath(`M 230 ${csy+14} L 290 ${csy}`);    // CShaft→RIdler
+        svg += fpath(`M 330 ${csy} L 360 ${csy}`);       // RIdler→ReverseGear
+        svg += fpath(`M 400 ${csy} C 430 ${csy} 440 ${csy} 440 ${(iy+csy)/2} L 440 ${oy+12}`); // RGear→up Output
+        svg += arrow(440,oy+8,'up');
+        // Nodes
+        svg += shaft(20,iy,90,iy,1,true);
+        svg += gear(126,iy,22,2,true);
+        svg += gear(188,iy,22,3,true);
+        svg += hub(230,csy,36,22,4,true);  // Counter Gear Shaft
+        svg += gear(310,csy,20,5,true);    // Reverse Idler
+        svg += gear(380,csy,20,6,true);    // Reverse Gear
+        svg += shaft(430,oy,460,oy,7,true);
+        svg += `</svg>`;
+        return svg;
+    }
+
+    // ── GEAR 1, 2, 3, 5 — same layout, different middle gear ────────────
+    const W=500, H=210;
+    const iy=60, csy=148; // input shaft y, counter shaft y
+    const gearNums = {1:'5',2:'5',3:'5',5:'5'}; // all called slot 5
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+    svg += housing(W,H);
+
+    // ── Housng detail lines (decorative internal structure) ──
+    svg += `<line x1="30" y1="${iy}" x2="470" y2="${iy}" stroke="#D0D5DD" stroke-width="0.5" stroke-dasharray="3 4"/>`;
+    svg += `<line x1="30" y1="${csy}" x2="470" y2="${csy}" stroke="#D0D5DD" stroke-width="0.5" stroke-dasharray="3 4"/>`;
+
+    // Flow path: Input → Main Drive Gear (top) → Counter Gear → Down to Counter Shaft → up through Nth Gear → Clutch Hub Sleeve → Clutch Hub → Output
+    // 1. Input shaft → Main Drive Gear
+    svg += fpath(`M 90 ${iy} L 108 ${iy}`);
+    // 2. Main Drive Gear → Counter Gear
+    svg += fpath(`M 154 ${iy} L 174 ${iy}`);
+    // 3. Counter Gear → down to Counter Gear Shaft
+    svg += fpath(`M 210 ${iy+22} C 210 ${iy+50} 210 ${csy-50} 210 ${csy-22}`);
+    // 4. Counter Gear Shaft → Nth Gear
+    svg += fpath(`M 248 ${csy} L 268 ${csy}`);
+    // 5. Nth Gear → up to Clutch Hub Sleeve (top level)
+    svg += fpath(`M 305 ${csy-22} C 305 ${csy-60} 330 ${iy+50} 340 ${iy+14}`);
+    // 6. Clutch Hub Sleeve → Clutch Hub
+    svg += fpath(`M 366 ${iy} L 388 ${iy}`);
+    // 7. Clutch Hub → Output Shaft
+    svg += fpath(`M 418 ${iy} L 436 ${iy}`);
+    svg += arrow(438,iy,'right');
+
+    // NODES
+    svg += shaft(20,iy,90,iy, 1, true); // Input Shaft
+    svg += gear(131,iy,23, 2, true);    // Main Drive Gear
+    svg += gear(196,iy,22, 3, true);    // Counter Gear
+    svg += hub(210,csy,46,24, 4, true); // Counter Gear Shaft
+    svg += gear(288,csy,20, 5, true);   // Nth Gear
+    svg += hub(353,iy,34,22, 6, true);  // Clutch Hub Sleeve
+    svg += hub(403,iy,34,22, 7, true);  // Clutch Hub
+    svg += shaft(436,iy,480,iy, 8, true); // Output Shaft
+
+    svg += `</svg>`;
+    return svg;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let currentGear='1', slots=[], bankItems=[], dragSrc=null;
+let attempts=0, corrects=0, streak=0, log=[];
+let userName='', userAbsen='';
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin(){
+    const nama=document.getElementById('input-name').value.trim();
+    const absen=document.getElementById('input-absen').value.trim();
+    const err=document.getElementById('login-error');
+    if(!nama||!absen){err.style.display='block';return;}
+    err.style.display='none';
+    userName=nama; userAbsen=absen;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-display').textContent=`${userName} (${userAbsen})`;
+    initApp();
+}
+['input-name','input-absen'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',()=>document.getElementById('login-error').style.display='none');
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+document.getElementById('login-button').addEventListener('click',doLogin);
+
+// ============================================================
+// INIT
+// ============================================================
+function initApp(){ buildGearTabs(); loadGear(currentGear); }
+
+function buildGearTabs(){
+    const c=document.getElementById('gear-tabs'); c.innerHTML='';
+    Object.keys(GEARS).forEach(key=>{
+        const g=GEARS[key];
+        const btn=document.createElement('button');
+        btn.className='gear-tab'+(key==='R'?' reverse':'')+(key===currentGear?' active':'');
+        btn.textContent=g.label; btn.onclick=()=>loadGear(key);
+        c.appendChild(btn);
+    });
+}
+
+function loadGear(key){
+    currentGear=key;
+    document.querySelectorAll('.gear-tab').forEach((btn,i)=>{
+        const k=Object.keys(GEARS)[i];
+        btn.className='gear-tab'+(k==='R'?' reverse':'')+(k===key?' active':'');
+    });
+    document.getElementById('puzzle-gear-label').textContent=GEARS[key].label;
+    document.getElementById('gear-info-text').innerHTML=GEARS[key].info;
+    renderDiagram('idle');
+    resetPuzzle();
+}
+
+function renderDiagram(state){
+    document.getElementById('tx-svg-container').innerHTML=buildTxSVG(currentGear,state);
+    const st=document.getElementById('diag-status');
+    st.className='diag-status';
+    if(state==='correct'){st.textContent='✅ Benar! Jalur aliran menyala — ikuti nomor urutan pada diagram!'; st.classList.add('correct');}
+    else if(state==='reverse'){st.textContent='✅ Reverse aktif! Jalur merah menandai arah mundur kendaraan!'; st.classList.add('correct');}
+    else if(state==='wrong'){st.textContent='❌ Urutan salah — periksa slot merah, coba lagi!'; st.classList.add('wrong');}
+    else{st.textContent='⬜ Susun komponen dengan benar untuk menyalakan jalur aliran!';}
+}
+
+// ============================================================
+// PUZZLE
+// ============================================================
+const ICONS={'Input Shaft':'⬛','Main Drive Gear':'⚙','Main Drive Gear (4th)':'⚙','Counter Gear':'⚙','Counter Gear Shaft':'🔩','1st Gear':'1️⃣','2nd Gear':'2️⃣','3rd Gear':'3️⃣','5th Gear':'5️⃣','Clutch Hub Sleeve':'🔘','Clutch Hub':'🔵','Output Shaft':'➡','Reverse Idler Gear':'🔄','Reverse Gear':'🔁'};
+
+function resetPuzzle(){
+    const g=GEARS[currentGear];
+    slots=new Array(g.components.length).fill(null);
+    bankItems=[...g.components]; shuffleArray(bankItems);
+    renderSlots(); renderBank(); renderDiagram('idle');
+}
+function shuffleBank(){ shuffleArray(bankItems); renderBank(); }
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+function renderSlots(){
+    const row=document.getElementById('slots-row'); row.innerHTML='';
+    slots.forEach((comp,i)=>{
+        const slot=document.createElement('div');
+        slot.className='slot'+(comp?' has-card':''); slot.id=`slot-${i}`;
+        slot.innerHTML=`<span class="slot-num">${i+1}</span>`;
+        if(comp) slot.innerHTML+=`<span class="slot-icon">${ICONS[comp]||'⚙'}</span><span class="slot-label">${comp}</span>`;
+        else slot.innerHTML+=`<span style="font-size:22px;opacity:.3">?</span><span class="slot-label" style="color:#90CAF9;font-size:10px">Slot ${i+1}</span>`;
+        slot.ondragover=e=>onSlotDragOver(e,i);
+        slot.ondrop=e=>onSlotDrop(e,i);
+        slot.ondragleave=()=>slot.classList.remove('drag-over');
+        slot.ondblclick=()=>clearSlot(i);
+        row.appendChild(slot);
+    });
+}
+function renderBank(){
+    const bank=document.getElementById('bank'); bank.innerHTML='';
+    bankItems.forEach((comp,i)=>{
+        const card=document.createElement('div');
+        card.className='comp-card'; card.draggable=true; card.id=`bank-${i}`;
+        card.innerHTML=`${ICONS[comp]||'⚙'} ${comp}`;
+        card.ondragstart=e=>onBankDragStart(e,i);
+        card.ondragend=()=>card.classList.remove('dragging');
+        bank.appendChild(card);
+    });
+}
+
+function onBankDragStart(e,idx){ dragSrc={type:'bank',idx}; e.dataTransfer.effectAllowed='move'; setTimeout(()=>document.getElementById(`bank-${idx}`)?.classList.add('dragging'),0); }
+function onSlotDragOver(e,idx){ e.preventDefault(); e.dataTransfer.dropEffect='move'; document.getElementById(`slot-${idx}`).classList.add('drag-over'); }
+function onSlotDrop(e,idx){
+    e.preventDefault(); document.getElementById(`slot-${idx}`).classList.remove('drag-over');
+    if(!dragSrc)return;
+    if(dragSrc.type==='bank'){ const comp=bankItems[dragSrc.idx]; if(slots[idx]!==null)bankItems.push(slots[idx]); slots[idx]=comp; bankItems.splice(dragSrc.idx,1); }
+    else if(dragSrc.type==='slot'){ const s=dragSrc.idx; if(s===idx)return; [slots[idx],slots[s]]=[slots[s],slots[idx]]; }
+    dragSrc=null; renderSlots(); renderBank();
+}
+function onBankDragOver(e){ e.preventDefault(); }
+function onBankDrop(e){
+    e.preventDefault(); if(!dragSrc)return;
+    if(dragSrc.type==='slot'){ const idx=dragSrc.idx; if(slots[idx]!==null){bankItems.push(slots[idx]);slots[idx]=null;} dragSrc=null; renderSlots(); renderBank(); }
+    dragSrc=null;
+}
+function clearSlot(idx){ if(slots[idx]!==null){bankItems.push(slots[idx]);slots[idx]=null;renderSlots();renderBank();} }
+
+// ============================================================
+// CHECK ANSWER
+// ============================================================
+function checkAnswer(){
+    const g=GEARS[currentGear]; const correct=g.components;
+    if(slots.some(s=>s===null)){showToast('⚠ Isi semua slot terlebih dahulu!','error');return;}
+    let allCorrect=true;
+    slots.forEach((comp,i)=>{
+        const slot=document.getElementById(`slot-${i}`);
+        slot.classList.remove('correct-slot','wrong-slot');
+        if(comp===correct[i])slot.classList.add('correct-slot');
+        else{slot.classList.add('wrong-slot');allCorrect=false;}
+    });
+    attempts++;
+    const timeStr=new Date().toLocaleTimeString('id-ID');
+    const userOrder=slots.join(' → ');
+    if(allCorrect){
+        corrects++; streak++;
+        const ds=g.reverse?'reverse':'correct';
+        renderDiagram(ds);
+        showToast('🎉 Benar! Jalur transmisi menyala!','success');
+        log.push({gear:g.label,time:timeStr,status:'Benar',order:userOrder});
+    } else {
+        streak=0; renderDiagram('wrong');
+        showToast('❌ Ada yang salah. Periksa slot merah!','error');
+        log.push({gear:g.label,time:timeStr,status:'Salah',order:userOrder});
+    }
+    updateStats(); renderLog();
+}
+
+function updateStats(){
+    const acc=attempts>0?Math.round((corrects/attempts)*100):0;
+    ['correct','total','acc','streak'].forEach(k=>{
+        if(k!=='streak'){document.getElementById(`score-${k==='acc'?'acc':k}`).textContent=k==='acc'?acc+'%':(k==='correct'?corrects:attempts);}
+        document.getElementById(`stat-${k}`).textContent=k==='acc'?acc+'%':(k==='correct'?corrects:(k==='total'?attempts:streak));
+    });
+}
+
+function renderLog(){
+    const tbody=document.getElementById('log-body'); tbody.innerHTML='';
+    [...log].reverse().forEach((e,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${log.length-i}</td><td>${e.gear}</td><td>${e.time}</td><td><span class="${e.status==='Benar'?'badge-correct':'badge-wrong'}">${e.status}</span></td><td style="font-family:'Share Tech Mono',monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.order}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function showToast(msg,type){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+type;
+    setTimeout(()=>{t.className='toast '+type;},3200);
+}
+
+function downloadReport(){
+    const acc=attempts>0?Math.round((corrects/attempts)*100):0;
+    let text=`LAPORAN SIMULASI TRANSMISI\n===============================\nNama: ${userName}\nAbsen: ${userAbsen}\nTanggal: ${new Date().toLocaleDateString('id-ID')}\n===============================\nPercobaan: ${attempts} | Benar: ${corrects} | Akurasi: ${acc}%\n\nRiwayat:\n`;
+    log.slice(-5).forEach((e,i)=>{text+=`${i+1}. ${e.gear} [${e.status}] ${e.time}\n`;});
+    const jsPDF = window.jspdf?.jsPDF;
+    if(!jsPDF){
+        showToast('⚠ Gagal membuat PDF. Muat ulang halaman dan coba lagi.', 'error');
+        return;
+    }
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    const content = doc.splitTextToSize(text, pageWidth - margin * 2);
+    doc.text(content, margin, 50);
+    const safeName = userName ? userName.replace(/\s+/g, '_') : 'laporan';
+    doc.save(`Laporan_Simulasi_${safeName}.pdf`);
+}
+
+function openShareModal(){
+    const acc=attempts>0?Math.round((corrects/attempts)*100):0;
+    let text=`⚙ SIMULASI TRANSMISI\nNama: ${userName} | Absen: ${userAbsen}\nPercobaan: ${attempts} | Benar: ${corrects} | Akurasi: ${acc}%\n`;
+    log.slice(-5).forEach((e,i)=>{text+=`${i+1}. ${e.gear} [${e.status}] ${e.time}\n`;});
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
+}
+
+function copyShareText(){ document.getElementById('share-text').select(); document.execCommand('copy'); showToast('📋 Teks disalin!','success'); }
+function confirmReset(){ document.getElementById('modal-reset').classList.add('open'); }
+function doResetAll(){ attempts=0;corrects=0;streak=0;log=[]; updateStats();renderLog();closeModal('modal-reset');resetPuzzle(); showToast('🔄 Reset berhasil!','success'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
+</script>
+</body>
+</html>
